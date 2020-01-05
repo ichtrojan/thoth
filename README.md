@@ -20,5 +20,5 @@ go get github.com/ichtrojan/thoth
 
 ## Usage
 
-check the [example](https://github.com/ichtrojan/thoth/example) directory to see a sample usage
+check the [example](https://github.com/ichtrojan/thoth/tree/master/example) directory to see a sample usage
 
