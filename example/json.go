@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/ichtrojan/thoth"
 	"log"
 	"net/http"
+
+	"github.com/ichtrojan/thoth"
 )
 
 func main() {
-	logger := thoth.InitJson()
+	logger := thoth.Init("json")
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		_, err := fmt.Fprintf(w, "Hello, Testing from Thoth")

@@ -1,11 +1,11 @@
 package thoth
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"time"
-	"encoding/json"
-	"io/ioutil"
 )
 
 const directory = "logs"
@@ -14,7 +14,7 @@ type Config struct {
 	directory string
 }
 
-func Init() Config {
+func Init(filetype string) Config {
 	if _, err := os.Stat(directory); os.IsNotExist(err) {
 		err = os.MkdirAll(directory, 0755)
 
@@ -23,25 +23,12 @@ func Init() Config {
 		}
 	}
 
-	path := fmt.Sprintf("%s/error.log", directory)
-
-	var _, err = os.Stat(path)
-
-	if os.IsNotExist(err) {
-		file, err := os.Create(path)
-
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		defer file.Close()
+	var filename = "error.log"
+	if filetype == "json" {
+		filename = "error.json"
 	}
 
-	return Config{directory: path}
-}
-
-func InitJson(params ...string) Config {
-	path := fmt.Sprintf("%s/error.json", directory)
+	path := fmt.Sprintf("%s/%s", directory, filename)
 
 	var _, err = os.Stat(path)
 
@@ -99,7 +86,7 @@ func (config Config) LogJson(error error) {
 
 	newError := map[string]interface{}{
 		"timestamp": time.Now().Format("2006-01-02 15:04:05"),
-		"error": error.Error(),
+		"error":     error.Error(),
 	}
 
 	jsonData = append(jsonData, newError)
