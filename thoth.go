@@ -85,7 +85,7 @@ func (config Config) LogJson(error error) {
 	json.Unmarshal(file, &jsonData)
 
 	newError := map[string]interface{}{
-		"timestamp": time.Now().Format("2006-01-02 15:04:05"),
+		"timestamp": time.Now().Unix(),
 		"error":     error.Error(),
 	}
 
