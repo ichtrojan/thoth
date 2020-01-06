@@ -6,22 +6,27 @@ import (
 	"time"
 )
 
-const directory = "logs"
-
 type Config struct {
 	directory string
 }
 
-func Init() Config {
-	if _, err := os.Stat(directory); os.IsNotExist(err) {
-		err = os.MkdirAll(directory, 0755)
+func Init(params ...string) Config {
+    path := ""
+    
+    if (len(params) > 0) {
+        path = params[0]
+    } else {
+        directory := "logs"
+        if _, err := os.Stat(directory); os.IsNotExist(err) {
+            err = os.MkdirAll(directory, 0755)
 
-		if err != nil {
-			fmt.Println(err)
-		}
-	}
+            if err != nil {
+                fmt.Println(err)
+            }
+        }
 
-	path := fmt.Sprintf("%s/error.log", directory)
+        path = fmt.Sprintf("%s/error.log", directory)
+    }
 
 	var _, err = os.Stat(path)
 

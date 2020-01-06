@@ -16,3 +16,7 @@
 
 # Goland
 /.idea
+
+/dist/
+/example/log*
+/example/log*/
