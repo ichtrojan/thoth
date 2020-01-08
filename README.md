@@ -10,6 +10,9 @@ In Egyptian Mythology, Thoth was the Egyptian ibis-headed god of knowledge, magi
 
 Thoth is an error logger for go. It helps log errors to a log file so you can go back to find how why and when something breaks in production.
 
+>**NOTE**
+>Log file can be either a `.log` file or a `.json` file at the time of this release
+
 # Installation
 
 You can install thoth by running

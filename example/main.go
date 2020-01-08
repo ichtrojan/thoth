@@ -2,25 +2,36 @@ package main
 
 import (
 	"fmt"
-	"github.com/ichtrojan/thoth"
-	"log"
 	"net/http"
+
+	"github.com/ichtrojan/thoth"
 )
 
 func main() {
-	logger := thoth.Init()
+	json, err := thoth.Init("json")
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	file, err := thoth.Init("log")
+
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		_, err := fmt.Fprintf(w, "Hello, Testing from Thoth")
 
 		if err != nil {
-			log.Fatal(err)
+			json.Log(err)
 		}
 
 		fmt.Println("Endpoint served")
 	})
 
 	if err := http.ListenAndServe(":8888", nil); err != nil {
-		logger.Log(err)
+		json.Log(err)
+		file.Log(err)
 	}
 }
