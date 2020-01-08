@@ -16,3 +16,6 @@
 
 # Goland
 /.idea
+
+# Testing Log Directory
+/logs
