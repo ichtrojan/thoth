@@ -9,7 +9,8 @@ import (
 )
 
 func main() {
-	logger := thoth.Init("log")
+	logger := thoth.Init("json")
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		_, err := fmt.Fprintf(w, "Hello, Testing from Thoth")
 
@@ -21,6 +22,6 @@ func main() {
 	})
 
 	if err := http.ListenAndServe(":8888", nil); err != nil {
-		logger.Log(err)
+		logger.LogJson(err)
 	}
 }
