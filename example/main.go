@@ -13,8 +13,15 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
+	
 
 	file, err := thoth.Init("log")
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	err = file.Tail()
 
 	if err != nil {
 		fmt.Println(err)
@@ -33,5 +40,6 @@ func main() {
 	if err := http.ListenAndServe(":8888", nil); err != nil {
 		json.Log(err)
 		file.Log(err)
+		
 	}
 }
