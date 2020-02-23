@@ -21,7 +21,7 @@ func main() {
 		fmt.Println(err)
 	}
 
-	err = file.Tail()
+	err = file.Serve("/mylogs")
 
 	if err != nil {
 		fmt.Println(err)

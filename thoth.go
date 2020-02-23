@@ -65,11 +65,11 @@ func Init(filetype string) (Config, error) {
 }
 
 
-func (config Config) Tail() error{
+func (config Config) Serve(endpoint string) error{
 
 	filename = config.directory
 
-	http.HandleFunc("/thoth", serveHome)
+	http.HandleFunc(endpoint, serveHome)
 	http.HandleFunc("/ws", serveWs)
 
 	return nil
@@ -148,9 +148,6 @@ func (config Config) logJson(error error) error {
 
 
 
-// write logic for websocket here
-
-
 const (
 	// Time allowed to write the file to the client.
 	writeWait = 10 * time.Second
@@ -166,8 +163,7 @@ const (
 )
 
 var (
-	// look at addr later
-	// addr      = flag.String("addr", ":8080", "http service address")
+
 	homeTempl = template.Must(template.New("").Parse(homeHTML))
 	filename  string
 	upgrader  = websocket.Upgrader{
@@ -264,14 +260,7 @@ func serveWs(w http.ResponseWriter, r *http.Request) {
 }
 
 func serveHome(w http.ResponseWriter, r *http.Request) {
-	// if r.URL.Path != "/" {
-	// 	http.Error(w, "Not found", http.StatusNotFound)
-	// 	return
-	// }
-	// if r.Method != "GET" {
-	// 	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-	// 	return
-	// }
+
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	p, lastMod, err := readFileIfModified(time.Time{})
@@ -291,7 +280,6 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 	}
 	homeTempl.Execute(w, &v)
 }
-
 
 
 const homeHTML = `<!doctype html>
