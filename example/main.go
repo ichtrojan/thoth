@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/ichtrojan/thoth"
@@ -11,20 +12,21 @@ func main() {
 	json, err := thoth.Init("json")
 
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 	}
-	
 
 	file, err := thoth.Init("log")
 
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 	}
 
-	err = file.Serve("/mylogs")
+	err = file.Serve("/logs")
 
 	if err != nil {
 		fmt.Println(err)
+		json.Log(err)
+		file.Log(err)
 	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -32,14 +34,12 @@ func main() {
 
 		if err != nil {
 			json.Log(err)
+			file.Log(err)
 		}
-
-		fmt.Println("Endpoint served")
 	})
 
 	if err := http.ListenAndServe(":8888", nil); err != nil {
 		json.Log(err)
 		file.Log(err)
-		
 	}
 }
