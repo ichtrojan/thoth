@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <title>Thoth Dashboard</title>
+</head>
+<body>
+<div class="container">
+    <div class="row"
+    style="margin-top:20px;"
+    >
+        <div class="column col-sm-6"><h3 class="h1-responsive">Thoth Logs</h3></div>
+        <div class="column col-sm-6">
+            <div class="form-group">
+                <select name="range" id="date-range" class="browser-default custom-select form-control" onchange="filterDate()">
+					<option value="1">All Logs</option>
+					<option value="2">Today</option>
+					<option value="3">Yesterday</option>
+					<option value="4">Last 7 Days</option>
+                </select>
+            </div>
+        </div>
+        
+    </div>
+    <div class="row">
+		<div class="column col-sm-12">
+			<div class="card">
+				<div class="card-header">
+					<div style="text-align: left;"><h5>Logs</h5></div>
+				</div>
+				<div class="card-body" style="background-color: black;padding:30px;height:500px;overflow:auto;">
+					<div class="content">
+						<pre id="fileData" class="white-text">{{.Data}}</pre>
+					</div>
+				</div>
+				<div class="card-footer">
+				<small class="form-text text-muted">Powered by Thoth 🙂</small>
+				</div>
+			</div>
+        </div>
+    </div>
+</div>
+
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script type="text/javascript">
+
+	const passw = prompt("enter secure key");
+
+	const url = "http://{{.Host}}/auth"
+
+	fetch(url,{
+		headers:{
+			key:passw
+		},
+	})
+	.then(resp => resp.json())
+	.then(data => {
+		if (data.status == "success"){
+			(() => {
+				const data = document.getElementById("fileData");
+				data.style.color = "white"
+				const conn = new WebSocket("ws://{{.Host}}/ws?lastMod={{.LastMod}}");
+				conn.onclose = function (evt) {
+					data.textContent = 'Connection closed';
+				}
+				
+				conn.onmessage = function (evt) {
+					
+					var dataArr = evt.data.split(/\r?\n/);
+					cleanArr = []
+					dataArr.forEach(dat => {
+						if(dat.length != 0){
+							cleanArr.push(dat)
+						}
+					})
+					
+					localStorage.setItem("logsLog",JSON.stringify(cleanArr))
+					cleanData(cleanArr)
+					
+				}
+			})();
+		}else{
+			const data = document.getElementById("fileData");
+        	data.textContent = 'Invalid security key';
+		}
+	})
+
+	function cleanData(dataList){
+		
+		const data = document.getElementById("fileData");
+		
+		if(dataList.length == 0){
+			data.textContent = "No logs to show";
+			
+		}else{
+			var dataStr = ""
+			dataList.forEach(dat => {
+				dataStr += dat + "\n";
+			})
+			data.textContent = dataStr;
+		}
+		
+	}
+	function getWeek(){
+		var date = new Date()
+		var month = date.getMonth() + 1;
+		var day = date.getDate();
+
+		dateList = []
+
+		day = parseInt(day)+1
+
+		for(var i = 1; i <= 8; i++){
+			
+			if(day == 0){
+
+				month -= 1;
+
+				if([4,6,9,10].includes(month) ==  true){
+
+					day = 30
+
+				}else if (month == 2){
+					
+					day = 28; 
+
+				}else{
+
+					day = 31
+
+				}
+
+			}else{
+				day = day - 1
+			}
+			
+			if(String(month).length == 1){
+				month = "0"+month;
+			}
+			if(String(day).length == 1){
+				day = "0"+day;
+			}
+
+			newDate = date.getFullYear() + "-" + month + "-" + day ;
+			if (day != "00"){
+				
+				dateList.push(newDate)
+			}
+		}
+
+		return dateList
+	}
+
+	function filterDate(){
+		var theData = JSON.parse(localStorage.getItem("logsLog"));
+		
+		
+		var value = document.getElementById("date-range").value;
+
+		if(value == "1"){
+			cleanData(theData)
+		}else{
+			switch (value){
+			case "2":
+				var filteredData = []
+				var date = new Date();
+				var month = date.getMonth() + 1;
+				var day = date.getDate()
+				if (String(month).length == 1){
+					month = "0" + month
+				}
+				if (String(day).length == 1){
+					day = "0" + day
+				}
+
+				var query = date.getFullYear() + "-" + month + "-" + day;
+				
+				theData.forEach(dat => {
+					if(dat.includes(query) == true){
+						filteredData.push(dat)
+					}
+				})
+				cleanData(filteredData)
+				break
+			case "3":
+				var filteredData = []
+				var date = new Date();
+				var month = date.getMonth() + 1;
+				var day = date.getDate() - 1;
+
+				
+				if(day == 0){
+					month -= 1;
+					if([4,6,9,10].includes(month) ==  true){
+						day = 30
+					}else if (month == 2){
+						// do logic for leap year
+						day = 28; 
+					}else{
+						day = 31
+					}
+				}
+				if (String(month).length == 1){
+					month = "0" + month
+				}
+				if (String(day).length == 1){
+					day = "0" + day
+				}
+				var query = date.getFullYear() + "-" + month + "-" + day;
+				
+				theData.forEach(dat => {
+					
+					if(dat.includes(query) == true){
+						filteredData.push(dat)
+					}
+				})
+				cleanData(filteredData)
+				break
+			case "4":
+				var filteredData = []
+				var dates = getWeek()
+				theData.forEach(dat => {
+					if(dates.includes(dat.substring(1,11)) == true){
+						filteredData.push(dat)
+					}
+				})
+				cleanData(filteredData)
+				break
+			default:
+				break
+			}
+			
+
+			
+		}
+		
+	}
+
+</script>
+
+<style>
+    /* .wrap {
+        margin: auto;
+        width: 90%;
+    }
+
+    .card-body {
+        padding: 20px;
+        background-color: black;
+        color: white;
+    } */
+</style>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+</body>
+</html>

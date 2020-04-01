@@ -18,12 +18,15 @@ import (
 
 const directory = "logs"
 
-const dashboardView = "./views/dashboard.gohtml"
+const jsonDashboardView = "./views/dashboardJson.gohtml"
+const logsDashboardView = "./views/dashboardLogs.gohtml"
 
 type Config struct {
 	directory string
 	filetype  string
+	key       string
 }
+
 
 func Init(filetype string) (Config, error) {
 	var config Config
@@ -64,10 +67,20 @@ func Init(filetype string) (Config, error) {
 	return Config{directory: path, filetype: filetype}, nil
 }
 
-func (config Config) Serve(endpoint string) error {
+func (config Config) Serve(endpoint string,key string) error {
+
 	filename = config.directory
 
-	http.HandleFunc(endpoint, serveHome)
+	config.key = key
+
+	
+
+	authUrl := "/auth"
+
+	
+
+	http.HandleFunc(endpoint, config.serveHome)
+	http.HandleFunc(authUrl, config.checkAuth)
 	http.HandleFunc("/ws", serveWs)
 
 	return nil
@@ -95,7 +108,7 @@ func (config Config) logFile(error error) error {
 
 	defer file.Close()
 
-	newError := fmt.Sprintf("[%s] %s", time.Now().Format("2006-01-02 15:04:05"), error.Error())
+	newError := fmt.Sprintf("[%s] %s\n", time.Now().Format("2006-01-02 15:04:05"), error.Error())
 
 	_, err = fmt.Fprintln(file, newError)
 
@@ -158,13 +171,33 @@ const (
 )
 
 var (
-	homeTempl, _ = template.ParseFiles(dashboardView)
+	homeTempl, _ = template.ParseFiles(jsonDashboardView)
+	logsTempl,_ = template.ParseFiles(logsDashboardView)
 	filename     string
 	upgrader     = websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
 	}
 )
+
+
+func (config Config) checkAuth(w http.ResponseWriter, r *http.Request){
+
+	err := r.Header["Key"][0]
+	
+	if err == config.key {
+		var s = map[string]string{"status":"success"}
+
+		json.NewEncoder(w).Encode(&s)
+
+	}else{
+		var s = map[string]string{"status":"failed"}
+
+		json.NewEncoder(w).Encode(&s)
+
+	}
+
+}
 
 func readFileIfModified(lastMod time.Time) ([]byte, time.Time, error) {
 	fi, err := os.Stat(filename)
@@ -268,7 +301,7 @@ func serveWs(w http.ResponseWriter, r *http.Request) {
 	reader(ws)
 }
 
-func serveHome(w http.ResponseWriter, r *http.Request) {
+func (config Config) serveHome(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	p, lastMod, err := readFileIfModified(time.Time{})
@@ -277,6 +310,7 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 		p = []byte(err.Error())
 		lastMod = time.Unix(0, 0)
 	}
+
 	var v = struct {
 		Host    string
 		Data    string
@@ -287,5 +321,16 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 		strconv.FormatInt(lastMod.UnixNano(), 16),
 	}
 
-	_ = homeTempl.Execute(w, &v)
+	switch config.filetype {
+	case "log":
+		_ = logsTempl.Execute(w, &v)
+	case "json":
+		_ = homeTempl.Execute(w, &v)
+	default:
+		_ = logsTempl.Execute(w, &v)
+	}
+
+	
+
+	
 }
