@@ -66,12 +66,12 @@
 			(() => {
 				const data = document.getElementById("fileData");
 				data.style.color = "white"
-				const conn = new WebSocket("ws://{{.Host}}/ws?lastMod={{.LastMod}}");
-				conn.onclose = function (evt) {
+				const connection = new WebSocket("ws://{{.Host}}/ws?lastMod={{.LastMod}}");
+				connection.onclose = function (evt) {
 					data.textContent = 'Connection closed';
 				}
 				
-				conn.onmessage = function (evt) {
+				connection.onmessage = function (evt) {
 					
 					var dataArr = evt.data.split(/\r?\n/);
 					cleanArr = []

@@ -200,18 +200,18 @@ func (config Config) checkAuth(w http.ResponseWriter, r *http.Request){
 }
 
 func readFileIfModified(lastMod time.Time) ([]byte, time.Time, error) {
-	fi, err := os.Stat(filename)
+	fileInfo, err := os.Stat(filename)
 	if err != nil {
 		return nil, lastMod, err
 	}
-	if !fi.ModTime().After(lastMod) {
+	if !fileInfo.ModTime().After(lastMod) {
 		return nil, lastMod, nil
 	}
-	p, err := ioutil.ReadFile(filename)
+	fileData, err := ioutil.ReadFile(filename)
 	if err != nil {
-		return nil, fi.ModTime(), err
+		return nil, fileInfo.ModTime(), err
 	}
-	return p, fi.ModTime(), nil
+	return fileData, fileInfo.ModTime(), nil
 }
 
 func reader(ws *websocket.Conn) {
@@ -251,21 +251,21 @@ func writer(ws *websocket.Conn, lastMod time.Time) {
 	for {
 		select {
 		case <-fileTicker.C:
-			var p []byte
+			var fileData []byte
 			var err error
 
-			p, lastMod, err = readFileIfModified(lastMod)
+			fileData, lastMod, err = readFileIfModified(lastMod)
 
 			if err != nil {
 				if s := err.Error(); s != lastError {
 					lastError = s
-					p = []byte(lastError)
+					fileData = []byte(lastError)
 				}
 			} else {
 				lastError = ""
 			}
 
-			if p != nil {
+			if fileData != nil {
 				_ = ws.SetWriteDeadline(time.Now().Add(writeWait))
 
 				if err := ws.WriteMessage(websocket.TextMessage, p); err != nil {
@@ -304,30 +304,30 @@ func serveWs(w http.ResponseWriter, r *http.Request) {
 func (config Config) serveHome(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
-	p, lastMod, err := readFileIfModified(time.Time{})
+	fileData, lastMod, err := readFileIfModified(time.Time{})
 
 	if err != nil {
-		p = []byte(err.Error())
+		fileData = []byte(err.Error())
 		lastMod = time.Unix(0, 0)
 	}
 
-	var v = struct {
+	var returnData = struct {
 		Host    string
 		Data    string
 		LastMod string
 	}{
 		r.Host,
-		string(p),
+		string(fileData),
 		strconv.FormatInt(lastMod.UnixNano(), 16),
 	}
 
 	switch config.filetype {
 	case "log":
-		_ = logsTempl.Execute(w, &v)
+		_ = logsTempl.Execute(w, &returnData)
 	case "json":
-		_ = homeTempl.Execute(w, &v)
+		_ = homeTempl.Execute(w, &returnData)
 	default:
-		_ = logsTempl.Execute(w, &v)
+		_ = logsTempl.Execute(w, &returnData)
 	}
 
 	
