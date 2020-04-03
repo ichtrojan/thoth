@@ -19,3 +19,6 @@
 
 # Testing Log Directory
 /logs
+
+# Example log files
+example/logs
