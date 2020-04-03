@@ -27,7 +27,6 @@ type Config struct {
 	key       string
 }
 
-
 func Init(filetype string) (Config, error) {
 	var config Config
 
@@ -67,17 +66,13 @@ func Init(filetype string) (Config, error) {
 	return Config{directory: path, filetype: filetype}, nil
 }
 
-func (config Config) Serve(endpoint string,key string) error {
+func (config Config) Serve(endpoint string, key string) error {
 
 	filename = config.directory
 
 	config.key = key
 
-	
-
 	authUrl := "/auth"
-
-	
 
 	http.HandleFunc(endpoint, config.serveHome)
 	http.HandleFunc(authUrl, config.checkAuth)
@@ -172,7 +167,7 @@ const (
 
 var (
 	homeTempl, _ = template.ParseFiles(jsonDashboardView)
-	logsTempl,_ = template.ParseFiles(logsDashboardView)
+	logsTempl, _ = template.ParseFiles(logsDashboardView)
 	filename     string
 	upgrader     = websocket.Upgrader{
 		ReadBufferSize:  1024,
@@ -180,37 +175,37 @@ var (
 	}
 )
 
-
-func (config Config) checkAuth(w http.ResponseWriter, r *http.Request){
-
+func (config Config) checkAuth(w http.ResponseWriter, r *http.Request) {
 	err := r.Header["Key"][0]
-	
+
 	if err == config.key {
-		var s = map[string]string{"status":"success"}
+		response := map[string]string{"status": "success"}
 
-		json.NewEncoder(w).Encode(&s)
+		_ = json.NewEncoder(w).Encode(&response)
+	} else {
+		response := map[string]string{"status": "failed"}
 
-	}else{
-		var s = map[string]string{"status":"failed"}
-
-		json.NewEncoder(w).Encode(&s)
-
+		_ = json.NewEncoder(w).Encode(&response)
 	}
-
 }
 
 func readFileIfModified(lastMod time.Time) ([]byte, time.Time, error) {
 	fileInfo, err := os.Stat(filename)
+
 	if err != nil {
 		return nil, lastMod, err
 	}
+
 	if !fileInfo.ModTime().After(lastMod) {
 		return nil, lastMod, nil
 	}
+
 	fileData, err := ioutil.ReadFile(filename)
+
 	if err != nil {
 		return nil, fileInfo.ModTime(), err
 	}
+
 	return fileData, fileInfo.ModTime(), nil
 }
 
@@ -268,7 +263,7 @@ func writer(ws *websocket.Conn, lastMod time.Time) {
 			if fileData != nil {
 				_ = ws.SetWriteDeadline(time.Now().Add(writeWait))
 
-				if err := ws.WriteMessage(websocket.TextMessage, p); err != nil {
+				if err := ws.WriteMessage(websocket.TextMessage, fileData); err != nil {
 					return
 				}
 			}
@@ -284,6 +279,7 @@ func writer(ws *websocket.Conn, lastMod time.Time) {
 
 func serveWs(w http.ResponseWriter, r *http.Request) {
 	ws, err := upgrader.Upgrade(w, r, nil)
+
 	if err != nil {
 		if _, ok := err.(websocket.HandshakeError); !ok {
 			log.Println(err)
@@ -292,6 +288,7 @@ func serveWs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var lastMod time.Time
+
 	if n, err := strconv.ParseInt(r.FormValue("lastMod"), 16, 64); err == nil {
 		lastMod = time.Unix(0, n)
 	}
@@ -311,7 +308,7 @@ func (config Config) serveHome(w http.ResponseWriter, r *http.Request) {
 		lastMod = time.Unix(0, 0)
 	}
 
-	var returnData = struct {
+	returnData := struct {
 		Host    string
 		Data    string
 		LastMod string
@@ -327,10 +324,6 @@ func (config Config) serveHome(w http.ResponseWriter, r *http.Request) {
 	case "json":
 		_ = homeTempl.Execute(w, &returnData)
 	default:
-		_ = logsTempl.Execute(w, &returnData)
+		return
 	}
-
-	
-
-	
 }
