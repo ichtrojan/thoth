@@ -62,7 +62,7 @@ Regardless of the variable assigned to a Thoth `Init` function and log format; e
 ```go
 ...
 if err != nil {
-  file.Log(err)
+    file.Log(err)
 }
 ...
 ```
@@ -74,7 +74,7 @@ if err != nil {
 isBroke := true
 
 if isBroke {
-  file.Log(errors.New("something went wrong"))
+    file.Log(errors.New("something went wrong"))
 }
 ...
 ```
@@ -86,7 +86,7 @@ if isBroke {
 ```go
 ...
 if err != nil {
-  json.Log(err)
+    json.Log(err)
 }
 ...
 ```
@@ -98,7 +98,7 @@ if err != nil {
 high := true
 
 if high {
-  json.Log(errors.New("highest in the room"))
+    json.Log(errors.New("highest in the room"))
 }
 ...
 ```
@@ -122,7 +122,7 @@ if err := file.Serve("/logs", "12345"); err != nil {
 }
 
 if err := http.ListenAndServe(":8000", nil); err != nil {
-        file.Log(err)
+    file.Log(err)
 }
 ...
 ```
