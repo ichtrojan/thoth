@@ -21,8 +21,7 @@ func main() {
 	}
 
 	if err := file.Serve("/logs", "12345"); err != nil {
-		json.Log(err)
-		file.Log(err)
+		log.Fatal(err)
 	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
